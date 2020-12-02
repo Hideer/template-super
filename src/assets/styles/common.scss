@@ -1,0 +1,115 @@
+button {
+  background-color: #1f75ec;
+}
+// 高复用业务代码
+.env-btn {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  line-height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  color: #fff;
+  text-align: center;
+  background-color: #056ed0;
+}
+
+.box-shadow {
+  box-shadow: 0px 2px 10px 0px rgba(224, 224, 224, 0.5);
+  // box-shadow: 0px 0px 10px 2px #ebedf0;
+  // box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.bq-card-pub {
+  margin: 20rpx 30rpx;
+  box-shadow: 0px 2px 10px 0px rgba(224, 224, 224, 0.5);
+  background-color: #fff;
+  border-radius: 8rpx;
+}
+
+// 省略号
+.ellops1 {
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+// 徽章
+.badge {
+  position: absolute;
+  // right: 0;
+  // top: 0;
+  z-index: 1;
+  color: #fff;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  border-radius: 10px;
+  padding: 0 6.5px;
+  font-style: initial !important;
+  background-color: #f24724;
+}
+
+.flex {
+  display: flex;
+}
+.flex-1 {
+  flex: 1;
+}
+.flex---c {
+  display: flex;
+  align-items: center;
+}
+.flex-c-c {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flex-l-c {
+  display: flex;
+  align-items: center;
+}
+.flex-r-c {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.flex-l-t {
+  display: flex;
+  align-items: flex-start;
+}
+.flex-sb-t {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.flex-sb-c {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.flex-sa-c {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.flex-c-c-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.flex-l-sb-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.flex-l-sa-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.fw {
+  font-weight: bold;
+}

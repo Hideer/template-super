@@ -1,0 +1,653 @@
+@charset "UTF-8";
+
+// mixin & %
+// 既定义了mixin也定义了%，根据需求使用@include或@extend调用
+//-----------------------------------------------------
+
+
+// clearfix
+@mixin clearfix($extend: true) {
+  @if $extend {
+    @extend %clearfix;
+  }
+
+  @else {
+    &::before,
+    &::after {
+      content: "";
+      display: table;
+    }
+
+    &::after {
+      clear: both;
+    }
+  }
+}
+
+%clearfix {
+  @include clearfix(false);
+}
+
+// // 文本超出显示省略号
+// @mixin ellipsis($num: 1){
+//   display: -webkit-box;
+//   overflow: hidden;
+//   -webkit-line-clamp: $num;
+//   -webkit-box-orient: vertical;
+// }
+
+// ellipsis
+@mixin ellipsis($extend: true) {
+  @if $extend {
+    @extend %ellipsis;
+  }
+
+  @else {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+%ellipsis {
+  @include ellipsis(false);
+}
+
+
+// ellipsis lines
+// only old webkit flex box
+@mixin ellipsis-lines($lines: 2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+}
+
+
+// word-break
+@mixin word-break($extend: true) {
+  @if $extend {
+    @extend %word-break;
+  }
+
+  @else {
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+}
+
+%word-break {
+  @include word-break(false);
+}
+
+
+// retina border
+// 0.5px实现 ios9
+@mixin retina-one-px() {
+  @supports (border-width: 0.5px) {
+
+    @media only screen and (-webkit-min-device-pixel-ratio: 2),
+    screen and (-webkit-min-device-pixel-ratio: 3) {
+      border-width: 0.5px;
+    }
+  }
+}
+
+
+// linear-gradient实现
+// 安卓4.3- 不支持background-size的百分比
+@mixin retina-one-px-bg($direction: top, $color: $colorBorder) {
+  background-repeat: no-repeat;
+
+  @if $direction==top {
+    background-image: linear-gradient(to bottom, $color 50%, transparent 50%);
+    background-size: 100% 1px;
+  }
+
+  @if $direction==bottom {
+    background-image: linear-gradient(to top, $color 50%, transparent 50%);
+    background-size: 100% 1px;
+    background-position: left bottom;
+  }
+
+  @if $direction==left {
+    background-image: linear-gradient(to right, $color 50%, transparent 50%);
+    background-size: 1px 100%;
+  }
+
+  @if $direction==right {
+    background-image: linear-gradient(to left, $color 50%, transparent 50%);
+    background-size: 1px 100%;
+    background-position: right top;
+  }
+
+  @if $direction==v {
+    // 左右两个边框
+    background-image: linear-gradient(to right, $color 50%, transparent 50%), linear-gradient(to left, $color 50%, transparent 50%);
+    background-size: 1px 100%;
+    background-position: left top, right top;
+  }
+
+  @if $direction==h {
+    // 上下两个边框
+    background-image: linear-gradient(to bottom, $color 50%, transparent 50%), linear-gradient(to top, $color 50%, transparent 50%);
+    background-size: 100% 1px;
+    background-position: left top, left bottom;
+  }
+
+  @if $direction==all {
+    // 上下左右四个边框
+    background-image: linear-gradient(to bottom, $color 50%, transparent 50%), linear-gradient(to top, $color 50%, transparent 50%), linear-gradient(to right, $color 50%, transparent 50%), linear-gradient(to left, $color 50%, transparent 50%);
+    background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+    background-position: left top, left bottom, left top, right top;
+  }
+}
+
+
+// border和transform实现
+// 注意before和after的层级问题
+@mixin retina-one-px-border($direction: top, $color: $colorBorder) {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+
+  @if $direction==top or $direction==bottom {
+    right: 0;
+    height: 0;
+    transform: scaleY(0.5);
+    border-top: 1px solid $color;
+  }
+
+  @if $direction==bottom {
+    top: auto;
+    bottom: 0;
+  }
+
+  @if $direction==right or $direction==left {
+    width: 0;
+    bottom: 0;
+    transform: scaleX(0.5);
+    border-left: 1px solid $color;
+  }
+
+  @if $direction==right {
+    left: auto;
+    right: 0;
+  }
+
+  @if $direction==all {
+    width: 200%;
+    height: 200%;
+    transform-origin: left top;
+    transform: scale(0.5);
+    border: 1px solid $color;
+  }
+}
+
+// border top & bottom
+%border-tb {
+  position: relative;
+
+  &::before {
+    content: "";
+    @include retina-one-px-border(top);
+    z-index: 1;
+  }
+
+  &::after {
+    content: "";
+    @include retina-one-px-border(bottom);
+  }
+}
+
+// border all
+%border-all {
+  position: relative;
+
+  &::before {
+    content: "";
+    @include retina-one-px-border(all);
+    z-index: -1;
+  }
+}
+
+
+// mixin
+// 只定义了mixin，所以只能通过@include来调用
+//-----------------------------------------------------
+
+
+// flex center
+@mixin center-flex($direction: both) {
+  display: flex;
+
+  @if $direction==both {
+    justify-content: center;
+    align-items: center;
+  }
+
+  @else if $direction==x {
+    justify-content: center;
+  }
+
+  @else if $direction==y {
+    align-items: center;
+  }
+}
+
+
+// translate center
+@mixin center-translate($direction: both) {
+  position: absolute;
+
+  @if $direction==both {
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+  }
+
+  @else if $direction==x {
+    left: 50%;
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  @else if $direction==y {
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+
+// triangle 三角箭头
+// 可采用空元素或伪元素生成，具体定位这里不涉及
+%triangle-basic {
+  content: "";
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+@mixin triangle($direction: top, $borderWidth: 6px, $borderColor: $colorC) {
+  @extend %triangle-basic;
+
+  @if $direction==top {
+    border-bottom: $borderWidth solid $borderColor;
+    border-left: $borderWidth dashed transparent;
+    border-right: $borderWidth dashed transparent;
+  }
+
+  @else if $direction==right {
+    border-left: $borderWidth solid $borderColor;
+    border-top: $borderWidth dashed transparent;
+    border-bottom: $borderWidth dashed transparent;
+  }
+
+  @else if $direction==bottom {
+    border-top: $borderWidth solid $borderColor;
+    border-left: $borderWidth dashed transparent;
+    border-right: $borderWidth dashed transparent;
+  }
+
+  @else if $direction==left {
+    border-right: $borderWidth solid $borderColor;
+    border-top: $borderWidth dashed transparent;
+    border-bottom: $borderWidth dashed transparent;
+  }
+}
+
+// v arrow 方向箭头
+@mixin v-arrow($direction: right, $borderWidth: 2px, $size: 10px) {
+  display: inline-block;
+  vertical-align: middle;
+  width: $size;
+  height: $size;
+
+  @if $direction==top {
+    border-top: $borderWidth solid currentColor;
+    border-right: $borderWidth solid currentColor;
+    transform: rotate(-45deg);
+  }
+
+  @else if $direction==right {
+    border-top: $borderWidth solid currentColor;
+    border-right: $borderWidth solid currentColor;
+    transform: rotate(45deg);
+  }
+
+  @else if $direction==bottom {
+    border-left: $borderWidth solid currentColor;
+    border-bottom: $borderWidth solid currentColor;
+    transform: rotate(-45deg);
+  }
+
+  @if $direction==left {
+    border-left: $borderWidth solid currentColor;
+    border-bottom: $borderWidth solid currentColor;
+    transform: rotate(45deg);
+  }
+}
+
+
+// %
+// 只定义了%，所以只能通过@extend来调用
+//-----------------------------------------------------
+
+// item arrow, 右侧箭头跳转指向
+%item-v-right {
+  &::after {
+    content: "";
+    @include v-arrow;
+    color: $colorC;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    margin-top: -1px;
+    transform: rotate(45deg) translate(0, -50%);
+    box-sizing: border-box;
+  }
+}
+
+
+// fullscreen center
+%fullscreen-center {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+}
+
+
+/* border 1px */
+@mixin half-border($_, $border-color: #ebedf0, $border-style: solid, $border-radius: 0px, $bg-color: transparent) {
+  position: relative;
+  z-index: 1;
+  &:after {
+    box-sizing: border-box;
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    top: 0;
+    width: 200%;
+    height: 200%;
+    background-color: $bg-color;
+    transform: scale(0.5, 0.5);
+    -webkit-transform: scale(0.5, 0.5);
+    border-radius: $border-radius * 2;
+    border-style: $border-style;
+    border-color: $border-color;
+    border-width: 0 0 0 0;
+    transform-origin: top left;
+    -webkit-transform-origin: top left;
+    @if $_ == 't' {
+      border-top-width: 1px;
+    } @else if $_ == 'b' {
+      border-bottom-width: 1px;
+    } @else if $_ == 'l' {
+      border-left-width: 1px;
+    } @else if $_ == 'r' {
+      border-right-width: 1px;
+    } @else {
+      border-width: 1px 1px 1px 1px;
+    }
+  }
+}
+
+
+
+//-----------------------------------------------------
+// animation START
+// 提供6组动画 fade-in/out, shrink-in/out, up-in/out, down-in/out, left-in/out, right-in/out
+//-----------------------------------------------------
+
+%animation-basic {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+// fade in/out
+//-----------------------------------------------------
+
+@mixin animation-fade-in($className: fade, $from: 0) {
+  $name: str-insert(In, $className, 0);
+
+  .#{$className}-in {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+  @include animation-fade($name: $name, $from: $from);
+}
+
+@mixin animation-fade-out($className: fade, $to: 0) {
+  $name: str-insert(Out, $className, 0);
+
+  .#{$className}-out {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @include animation-fade($name: $name, $from: 1, $to: $to);
+}
+
+// shrink in/out
+//-----------------------------------------------------
+
+@mixin animation-shrink-in($className: shrink, $from: 0.815) {
+  $name: str-insert(In, $className, 0);
+
+  .#{$className}-in {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+  @keyframes #{$name} {
+    0% {
+      opacity: 0;
+      transform: scale($from);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+@mixin animation-shrink-out($className: shrink, $to: 1.185) {
+  $name: str-insert(Out, $className, 0);
+
+  .#{$className}-out {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale($to);
+    }
+  }
+}
+
+// down in/out
+//-----------------------------------------------------
+
+@mixin animation-down-in($className: down, $value: 100%) {
+  $name: str-insert(In, $className, 0);
+
+  .#{$className}-in {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 0;
+      transform: translate(0, $value);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+  }
+}
+
+@mixin animation-down-out($className: down, $value: 100%) {
+  $name: str-insert(Out, $className, 0);
+
+  .#{$className}-out {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(0, $value);
+    }
+  }
+}
+
+// up in/out
+//-----------------------------------------------------
+
+@mixin animation-up-in($className: up, $value: -100%) {
+  $name: str-insert(In, $className, 0);
+
+  .#{$className}-in {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 0;
+      transform: translate(0, $value);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+  }
+}
+
+@mixin animation-up-out($className: up, $value: -100%) {
+  $name: str-insert(Out, $className, 0);
+
+  .#{$className}-out {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(0, $value);
+    }
+  }
+}
+
+// left in/out
+//-----------------------------------------------------
+
+@mixin animation-left-in($className: left, $value: -100%) {
+  $name: str-insert(In, $className, 0);
+
+  .#{$className}-in {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 0;
+      transform: translate($value, 0);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+  }
+}
+
+@mixin animation-left-out($className: left, $value: -100%) {
+  $name: str-insert(Out, $className, 0);
+
+  .#{$className}-out {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate($value, 0);
+    }
+  }
+}
+
+// right in/out
+//-----------------------------------------------------
+
+@mixin animation-right-in($className: right, $value: 100%) {
+  $name: str-insert(In, $className, 0);
+
+  .#{$className}-in {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 0;
+      transform: translate($value, 0);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+  }
+}
+
+@mixin animation-right-out($className: right, $value: 100%) {
+  $name: str-insert(Out, $className, 0);
+
+  .#{$className}-out {
+    animation-name: $name;
+    @extend %animation-basic;
+  }
+
+  @keyframes #{$name} {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate($value, 0);
+    }
+  }
+}
+
+//-----------------------------------------------------
+// animation END
+//-----------------------------------------------------
