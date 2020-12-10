@@ -54,11 +54,7 @@ export default {
 
     return {
       time,
-      reversetime: time
-        .toString()
-        .split('')
-        .reverse()
-        .join(''),
+      reversetime: time.toString().split('').reverse().join(''),
     };
   },
 
@@ -316,7 +312,19 @@ export default {
       });
     });
   },
+
+  /**
+   * 获取变量的类型
+   * @param v
+   * @return { str } 返回类型
+   */
+  getVarType(v: any) {
+    let reg = new RegExp(/\[object (.+)\]/g);
+    let type = Object.prototype.toString.call(v).replace(reg, '$1');
+    return type;
+  },
 };
+
 
 // -------------- ts 类型定义 start ---------------
 

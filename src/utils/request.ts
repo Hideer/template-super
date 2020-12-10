@@ -1,8 +1,6 @@
 import config from '@/config';
 import store from '@/store';
 import utils from '@/utils';
-// import Jsrsasign from 'jsrsasign';
-// import { encryptByAES, decryptByAES } from './encrypt';
 
 /**
  * 网络请求 封装成promise、抹平fail平台差异、res.data.success不为true自动报错（并进入promise catch）
@@ -10,188 +8,113 @@ import utils from '@/utils';
  * 微信环境405等http错误走的success回调，支付宝走的fail
  * @param {String} url 请求url
  * @param {Object} options.data 请求数据
- * @param {Boolean} options.noToast 请求失败是否不自动报错
- * @param {Boolean} options.showLoading 是否显示loading
- * @param {Boolean} options.noEncrypt 是否不加密
- * @param {Boolean} options.isPrefix 是否前缀
- * @param {String} encryptKey 加密key
- * @param {String} datavEncrypt datav是否加密
+ * @param {Boolean} options.isToast 是否需要touast提示
+ * @param {Boolean | string} options.isShowLoading 是否显示loading | 如果传入string则为加载显示的文字
+ * @param {Boolean} options.isPrefix 是否自定义请求前缀
  * @param {*} rest 其他uni.request参数，如data、header method默认：POST
  */
 
 const request: requestProps = (
   url,
-  {
-    data,
-    noToast,
-    showLoading,
-    noEncrypt,
-    encryptKey,
-    isPrefix,
-    datavEncrypt,
-    is360CloudImg = false,
-    ...rest
-  } = {}
+  { data, isToast, isShowLoading, isPrefix, method = 'POST', ...rest } = {}
 ) => {
-  showLoading &&
+  isShowLoading &&
     uni.showLoading({
-      title: '加载中',
+      title: utils.getVarType(isShowLoading) === 'Sring' ? isShowLoading : '加载中',
     });
-  const openEncrypt = !noEncrypt && config.isEncrypt;
-  const { reversetime, time } = utils.getReverseTime();
-
-  const newEncryptKey = encryptKey || 'zbq' + time;
-  let newData = {};
 
   // 加上全局通用
   data = {
-    // orgCode: config.orgCode, // orgCode 是机构编码 一般是从机构注册号中截取的9位
-    // branchCode: config.branchCode, // branchCode是分院编码  在机构码的基础上增加院区拼音或其他
-    // medOrgCode: config.orgCode, // 同 orgCode
-    // medOrgBranchCode: config.branchCode, // 同 branchCode
-    // groupOrgCode: config.groupOrgCode, //groupOrgCode  是机构组的意思 标识 某个区域汇中所有的机构
-    // orgGroupCode: config.groupOrgCode, //orgGroupCode = groupOrgCode
-    userCode: store.state.baseInfo.userCode,
-    bqBaseAccessToken: store.state.baseInfo.bqBaseAccessToken,
     ...(data || {}),
   };
 
-  // 处理历史遗留问题，赋值  todo 需找接口统一处理下！
-  data.medOrgCode = data.orgCode;
-  data.medOrgBranchCode = data.branchCode;
-  data.orgGroupCode = data.groupOrgCode;
-
-  if (openEncrypt) {
-    if (config.isLog) {
-      console.log(`${url}⬆️⬆️⬆️`, data, JSON.stringify(data));
-    }
-    // newData = encodeURIComponent(encryptByAES(JSON.stringify(data), newEncryptKey));
-    newData = encodeURIComponent(JSON.stringify(data));
-  } else {
-    newData = data;
+  if (config.isLog) {
+    // 接口日志
+    console.log(`${url}⬇️⬇️⬇️`, data);
   }
 
   return new Promise((resolve, reject) => {
     uni.request({
-      url: isPrefix ? url : config.getEnvConfig().apiPrefix + url,
-      data: newData,
+      url: isPrefix ? url : config.getEnvConfig().apiPrefix + url, // 自定义服务地址 或 全局配置服务
+      data,
       dataType: 'text',
-      header: setRequestHeader(data, reversetime),
-      method: 'POST',
+      header: setRequestHeader(data),
+      method,
       // 微信环境405等http错误也会进此回调
-      success: res => {
+      success: (res: any) => {
+        // TODO: 根据接口返回约定，定义对应类型结构
         if (res.statusCode === 200) {
-          if (openEncrypt) {
-            // res.data = decryptByAES(res.data, newEncryptKey);
-          }
-          if (datavEncrypt) {
-            let data = JSON.parse((<any>res).data);
+          res.data = JSON.parse(res.data);
 
-            console.log('datav加解密', res, data);
-
-            if (!data.success) {
-              return reject({
-                ...res,
-                data: JSON.parse((<any>res).data),
-              });
-            }
-
-            // res.data = decryptByAES(data.bizInterfaceData, config.aesKeyDatav);
-          }
-          res.data = JSON.parse((<any>res).data);
           if (config.isLog) {
+            // 接口日志
             console.log(`${url}⬇️⬇️⬇️`, res.data);
           }
+
           resolve(res);
         } else {
+          isToast && utils.toast(`error:接口请求状态码${res.statusCode}!`);
           reject(res);
         }
       },
-      fail: err => {
+      fail: (err: any) => {
+        isToast && utils.toast(`error:请求超时，请检查网络环境!`);
         reject(err);
       },
-      ...rest,
     });
   }).then(
-    res => {
-      const data = (<any>res).data;
-      showLoading && uni.hideLoading();
+    (res: any) => {
+      // resolve
+      isShowLoading && uni.hideLoading();
+
+      const data = res.data;
+
       if (data.success) {
         return Promise.resolve(data);
       }
-      if (!noToast) {
+
+      // 这里处理业务级别的错误提示，根据具体服务约定是通过code还是通过接口请求http状态码statusCode的全局控制
+      isToast &&
         utils.toast(
           (data.errMsg && `${data.errMsg}${data.errCode ? '(' + data.errCode + ')' : ''})`) ||
             data.data ||
             config.serverErrorText
         );
-      }
+
       // 服务端返回errMsg，Promise返回reject
       return Promise.reject(data);
     },
-    err => {
-      console.log(err);
-      showLoading && uni.hideLoading();
-      if (!noToast) {
-        if (err.statusCode) {
-          utils.toast(config.httpErrorText(err.statusCode));
-        } else {
-          utils.toast(config.networkErrorText);
-        }
-      }
+    (err) => {
+      // reject
+      isShowLoading && uni.hideLoading();
       return Promise.reject(err);
     }
   );
 };
 
-// /**
-//  * 签名
-//  * @param {string} str
-//  * @param {string} pri
-//  */
-// function getSignTxt(str, pri) {
-//   if (!str || !pri) {
-//     return;
-//   }
-//   let signTxt;
-//   const privateKey = `-----BEGIN PRIVATE KEY-----${pri}-----END PRIVATE KEY-----`;
-//   const signature = new Jsrsasign.KJUR.crypto.Signature({
-//     alg: 'SHA256withRSA',
-//     prvkeypem: privateKey,
-//   });
-//   signature.updateString(str);
-//   signTxt = Jsrsasign.hextob64(signature.sign());
-//   return signTxt;
-// }
-
 /**
  * 生成请求头部
- * @param {String} param 签名
+ * @param {Object} param 签名
  * @param {Number} bqtime 时间戳
  */
-function setRequestHeader(param: any, bqtime: string) {
-  const privateKey = store.state.baseInfo.privateKey || '';
+function setRequestHeader(param: any) {
   const token = store.state.baseInfo.token || '';
 
-  // 请求参数签名加密
-  // const sign = getSignTxt(JSON.stringify(param), privateKey);
+  let reqHeader: { [x: string]: string } = {
+    ...param,
+  };
 
-  let reqHeader: { [x: string]: string } = {};
-
+  // 添加请求来源
   // #ifdef MP-ALIPAY
   reqHeader['terminal-type'] = 'alimini';
   // #endif
-
   // #ifdef MP-WEIXIN
   reqHeader['terminal-type'] = 'weixinmini';
   // #endif
 
   return {
-    ua: 'BQHospital', // ua项目标
-    token, // 请求令牌
-    // sign, // 请求签名
-    bqtime, //反转13位时间戳
     ...reqHeader,
+    token, // 请求令牌
   };
 }
 
